@@ -1,3 +1,4 @@
 Pillow
 google-generativeai
 gradio
+python-dotenv
