@@ -19,4 +19,4 @@ safety_settings = [
 ]
 
 # Define the model name
-model_name = "gemini-1.5-pro"
+model_name = "gemini-1.5-flash"
