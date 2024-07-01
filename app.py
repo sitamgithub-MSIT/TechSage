@@ -1,167 +1,47 @@
 # Necessary Imports
-import os
-import time
-import base64
-import PIL.Image
 import gradio as gr
-import google.generativeai as genai
 
-from dotenv import load_dotenv
+# Import the necessary functions from the src folder
+from src.chat import query_message
+from src.llm_response import llm_response
 
-# Load the Environment Variables from .env file
-load_dotenv()
 
-# Set the Gemini API Key
-genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
-
-# Set up the model configuration for content generation
-generation_config = {
-    "temperature": 0.4,
-    "top_p": 1,
-    "top_k": 32,
-    "max_output_tokens": 1400,
-}
-
-# Define safety settings for content generation
-safety_settings = [
-    {"category": f"HARM_CATEGORY_{category}", "threshold": "BLOCK_MEDIUM_AND_ABOVE"}
-    for category in [
-        "HARASSMENT",
-        "HATE_SPEECH",
-        "SEXUALLY_EXPLICIT",
-        "DANGEROUS_CONTENT",
-    ]
-]
-
-# Create the Gemini Models for Text and Vision respectively
-txt_model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    generation_config=generation_config,
-    safety_settings=safety_settings,
-)
-vis_model = genai.GenerativeModel(
-    model_name="gemini-pro-vision",
-    generation_config=generation_config,
-    safety_settings=safety_settings,
-)
-
-# System Prompt
-system_prompt = """
-Model: "As a tech blog chatbot, your role is crucial in providing accurate information and guidance to users seeking assistance in various areas of technology, including programming, software development, hardware troubleshooting, and technology trends. Your focus will be on addressing queries related to coding problems, software tools, programming languages, and emerging technologies, offering insights and recommendations to support users in their tech-related endeavors.
-
-**Analysis Guidelines:**
-
-1. **Data Evaluation:** Assess data related to coding trends, software development methodologies, programming languages usage, and technological advancements to understand the current landscape and identify areas for exploration and improvement.
-2. **Problem Identification:** Identify common coding challenges, software bugs, hardware issues, and technology gaps faced by users, considering factors such as complexity, compatibility, and user skill levels.
-3. **Solution Discussion:** Discuss potential solutions, workarounds, and best practices to resolve coding issues, debug software problems, troubleshoot hardware malfunctions, and stay updated with the latest technological innovations.
-4. **Community Engagement:** Explore opportunities for community engagement and knowledge-sharing to foster collaboration, learning, and skill development among users, including participation in forums, coding communities, and tech events.
-5. **Monitoring and Evaluation:** Propose methods for monitoring trends, evaluating software performance, measuring user satisfaction, and tracking technological advancements to ensure users receive relevant and up-to-date information and support.
-6. **Collaboration:** Emphasize the importance of collaboration with fellow tech enthusiasts, developers, industry experts, and technology companies to facilitate knowledge exchange, promote innovation, and address common challenges in the tech community.
-
-**Refusal Policy:**
-If the user provides information not related to technology, programming, software development, hardware troubleshooting, or technology trends, kindly inform them that this chatbot is designed to address queries specific to these areas. Encourage them to seek assistance from appropriate sources for other inquiries.
-
-Your role as a tech blog chatbot is to provide valuable insights and recommendations to support users in navigating the complexities of technology, coding, software development, and hardware troubleshooting. Proceed to assist users with their queries, ensuring clarity, empathy, and accuracy in your responses."
-
+# HTML Content for the Interface
+TITLE = """<h1 align="center">Well Being 💬</h1>"""
+SUBTITLE = """<h2 align="center">End Preventable Child Deaths: Join the Global Effort to Save Children's Lives!</h2>"""
+DESCRIPTION = """
+<div
+  style="
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  "
+>
+  <p>
+    We aim to reduce child mortality globally. 👶🏻 Our goals are under-5
+    mortality of ≤25 per 1,000 live births 📉 and neonatal mortality of ≤12 per
+    1,000. 📉 This requires preventing newborn and early childhood deaths
+    worldwide. ✊ Together, we can give every child a healthy start to life! 🌍
+  </p>
+</div>
 """
-
-
-# Image to Base 64 Converter Function
-def image_to_base64(image_path):
-    """
-    Convert an image file to a base64 encoded string.
-
-    Args:
-        image_path (str): The path to the image file.
-
-    Returns:
-        str: The base64 encoded string representation of the image.
-    """
-    # Open Image and Encode it to Base64
-    with open(image_path, "rb") as img:
-        encoded_string = base64.b64encode(img.read())
-
-    # Return the Encoded String
-    return encoded_string.decode("utf-8")
-
-
-# Function that takes User Inputs and displays it on ChatUI
-def query_message(history, txt, img):
-    """
-    Adds a query message to the chat history.
-
-    Parameters:
-    history (list): The chat history.
-    txt (str): The text message.
-    img (str): The image file path.
-
-    Returns:
-    list: The updated chat history.
-    """
-    if not img:
-        history += [(txt, None)]
-        return history
-
-    # Convert Image to Base64
-    base64 = image_to_base64(img)
-
-    # Display Image on Chat UI and return the history
-    data_url = f"data:image/jpeg;base64,{base64}"
-    history += [(f"{txt} ![]({data_url})", None)]
-    return history
-
-
-# Function that takes User Inputs, generates Response and displays on Chat UI
-def llm_response(history, text, img):
-    """
-    Generate a response based on the input.
-
-    Parameters:
-    history (list): A list of previous chat history.
-    text (str): The input text.
-    img (str): The path to an image file (optional).
-
-    Returns:
-    list: The updated chat history.
-    """
-
-    # Convert chat history to string for context
-    history_str = "\n".join(
-        [
-            f"User: {msg[0]}\nBot: {msg[1]}" if msg[1] else f"User: {msg[0]}"
-            for msg in history
-        ]
-    )
-
-    # Generate Response based on the Input
-    if not img:
-        # response = txt_model.generate_content(f"{system_prompt}User: {text}")
-        chat_session = txt_model.start_chat(history=[])
-        response = chat_session.send_message(
-            f"{system_prompt}History:\n{history_str}\nUser: {text}"
-        )
-    else:
-        # Open Image and Generate Response
-        img = PIL.Image.open(img)
-        chat_session = vis_model.start_chat(history=[])
-        response = chat_session.send_message([f"{system_prompt}\nUser: {text}", img])
-
-        # response = vis_model.generate_content([f"{system_prompt}User: {text}", img])
-
-    # Display Response on Chat UI and return the history
-    history += [(None, response.text)]
-    return history
 
 
 # Interface Code using Gradio
 with gr.Blocks(theme=gr.themes.Soft()) as app:
+
+    # Add HTML Content
+    gr.HTML(TITLE)
+    gr.HTML(SUBTITLE)
+    gr.HTML(DESCRIPTION)
 
     with gr.Row():
         # Image UI
         image_box = gr.Image(type="filepath")
 
         # Chat UI
-        chatbot = gr.Chatbot(scale=2, height=450)
+        chatbot = gr.Chatbot(scale=2, height=750)
     text_box = gr.Textbox(
         placeholder="Enter text and press enter, or upload an image",
         container=False,
