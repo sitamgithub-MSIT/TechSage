@@ -14,7 +14,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as app:
         image_box = gr.Image(type="filepath")
 
         # Chat UI
-        chatbot = gr.Chatbot(scale=2, height=750)
+        chatbot = gr.Chatbot(scale=2, height=450)
     text_box = gr.Textbox(
         placeholder="Enter text and press enter, or upload an image",
         container=False,
